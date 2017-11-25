@@ -10,6 +10,22 @@ public class CameraManager : MonoBehaviour {
 	public static Bounds InvalidBounds { get { return invalidBounds; } }
     public static int ScrollWidth { get { return 15; } }
     public static float ScrollSpeed { get { return 25; } }
+    public static float DragSpeed { get { return 6; } }
+    public static float RotateAmount { get { return 10; } }
+    public static float RotateSpeed { get { return 100; } }
+    public static float MinCameraHeight { get { return 10; } }
+    public static float MaxCameraHeight { get { return 80; } }
+
+    private static CameraManager _instance = null;
+    private MonoBehaviour _currentlySelectedObject = null;
+    private MonoBehaviour _currentlyHoveredObject = null;
+
+    protected HUD _playerHUD;
+
+    public HUD PlayerHUD
+    {
+        get { return _playerHUD; }
+    }
 
 	public static GameObject FindHitObject(Vector3 origin)
 	{
@@ -102,4 +118,72 @@ public class CameraManager : MonoBehaviour {
 	void Update () {
 	
 	}
+
+    void Awake()
+    {
+        if (_instance != null)
+        {
+            Destroy(this.gameObject);
+            Debug.Log("Should not reach here");
+        }
+        else
+        {
+            _instance = this;
+        }
+    }
+
+    public static CameraManager Instance
+    {
+        get
+        {
+            if (!_instance)
+            {
+                _instance = GameObject.FindObjectOfType<CameraManager>();
+            }
+            return _instance;
+        }
+    }
+
+    public delegate void OnObjectSelectionChangeHandler(MonoBehaviour oldObject, MonoBehaviour newObject);
+    public event OnObjectSelectionChangeHandler OnObjectSelectionChanged;
+    public delegate void OnObjectHoveringChangedHandler(MonoBehaviour oldObject, MonoBehaviour newObject);
+    public event OnObjectHoveringChangedHandler OnObjectHoveringChanged;
+
+    public MonoBehaviour SelectedObject
+    {
+        get
+        {
+            return _currentlySelectedObject;
+        }
+        set
+        {
+            if (_currentlySelectedObject != value)
+            {
+                MonoBehaviour oldSelectedObject = _currentlySelectedObject;
+                _currentlySelectedObject = value;
+                OnObjectSelectionChanged(oldSelectedObject, _currentlySelectedObject);
+            }
+        }
+    }
+
+    public MonoBehaviour HoveredObject
+    {
+        get
+        {
+            return _currentlyHoveredObject;
+        }
+        set
+        {
+            if (_currentlyHoveredObject != value)
+            {
+                MonoBehaviour oldHoveredObject = _currentlyHoveredObject;
+                _currentlyHoveredObject = value;
+
+                if (OnObjectHoveringChanged != null)
+                {
+                    OnObjectHoveringChanged(oldHoveredObject, _currentlyHoveredObject);
+                }
+            }
+        }
+    }
 }
